@@ -19,9 +19,10 @@ saves or discards their changes.
 
 | Plugin Version | Filament Version | PHP Version |
 |----------------|------------------|-------------|
-| 1.x            | 2.x              | \> 8.0      |
-| 2.x            | 3.x              | \> 8.1      |
-| 3.x            | 3.x              | \> 8.1      |
+| 1.x            | 2.x              | 8.0+        |
+| 2.x            | 3.x              | 8.1+        |
+| 3.x            | 3.x              | 8.1+        |
+| 4.x            | 4.x              | 8.2+        |
 
 You can install the package via composer:
 
