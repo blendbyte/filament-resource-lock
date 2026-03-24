@@ -75,13 +75,13 @@ class LockResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 DeleteAction::make()
                     ->icon('heroicon-o-lock-open')
                     ->successNotificationTitle(__('filament-resource-lock::manager.unlocked'))
                     ->label(__('filament-resource-lock::manager.unlock')),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 DeleteBulkAction::make()
                     ->deselectRecordsAfterCompletion()
                     ->requiresConfirmation()
@@ -126,7 +126,7 @@ class LockResource extends Resource
             return null;
         }
 
-        return static::getModel()::count();
+        return (string) static::getModel()::count();
     }
 
     public static function getNavigationLabel(): string

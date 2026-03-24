@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 
+/**
+ * @property \Carbon\Carbon|null $updated_at
+ */
 class ResourceLock extends Model
 {
     use HasFactory;

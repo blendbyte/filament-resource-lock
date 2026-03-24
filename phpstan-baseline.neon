@@ -1,0 +1,37 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$view of function view expects view\-string\|null, string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/Http/Livewire/ResourceLockObserver.php
+
+		-
+			message: '#^Trait Blendbyte\\FilamentResourceLock\\Models\\Concerns\\HasLocks is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Models/Concerns/HasLocks.php
+
+		-
+			message: '#^Trait Blendbyte\\FilamentResourceLock\\Resources\\Pages\\Concerns\\UsesLocks is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Resources/Pages/Concerns/UsesLocks.php
+
+		-
+			message: '#^Trait Blendbyte\\FilamentResourceLock\\Resources\\Pages\\Concerns\\UsesRelationManagerResourceLock is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Resources/Pages/Concerns/UsesRelationManagerResourceLock.php
+
+		-
+			message: '#^Trait Blendbyte\\FilamentResourceLock\\Resources\\Pages\\Concerns\\UsesResourceLock is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Resources/Pages/Concerns/UsesResourceLock.php
+
+		-
+			message: '#^Trait Blendbyte\\FilamentResourceLock\\Resources\\Pages\\Concerns\\UsesSimpleResourceLock is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Resources/Pages/Concerns/UsesSimpleResourceLock.php
