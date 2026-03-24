@@ -166,13 +166,9 @@ php artisan migrate
 php artisan vendor:publish --tag="filament-resource-lock-views"
 ```
 
-## Changelog
-
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
 ## Contributing
 
-Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
+Please see [GitHub releases](https://github.com/blendbyte/filament-resource-lock/releases) for changelog information.
 
 ## License
 
