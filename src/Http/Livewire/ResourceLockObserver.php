@@ -28,8 +28,11 @@ class ResourceLockObserver extends Component
     {
         if (! ResourceLockPlugin::get()->shouldLimitUnlockerAccess()) {
             $this->isAllowedToUnlock = true;
-        } elseif (ResourceLockPlugin::get()->shouldLimitUnlockerAccess() && Gate::allows(ResourceLockPlugin::get()->getUnlockerGate())) {
-            $this->isAllowedToUnlock = true;
+        } else {
+            $gate = ResourceLockPlugin::get()->getUnlockerGate();
+            if ($gate !== null && Gate::allows($gate)) {
+                $this->isAllowedToUnlock = true;
+            }
         }
     }
 

@@ -39,9 +39,9 @@ class ResourceLockPlugin implements Plugin
 
     protected ?string $resourceClass = null;
 
-    protected ?object $userModel = null;
+    protected ?string $userModel = null;
 
-    protected ?object $resourceLockModel = null;
+    protected ?string $resourceLockModel = null;
 
     protected ?int $lockTimeout = null;
 

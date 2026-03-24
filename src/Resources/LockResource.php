@@ -48,7 +48,8 @@ class LockResource extends Resource
                 TextColumn::make('lockable_type')->label(__('Lockable type')),
                 TextColumn::make('created_at')->label(__('Created at')),
                 TextColumn::make('updated_at')->label(__('Updated at')),
-                TextColumn::make('updated_at')->label(__('Expired'))
+                TextColumn::make('lock_status')->label(__('Expired'))
+                    ->state(fn ($record) => $record->isExpired())
                     ->badge()
                     ->color(static function ($record): string {
                         if ($record->isExpired()) {
@@ -100,7 +101,9 @@ class LockResource extends Resource
     public static function canViewAny(): bool
     {
         if (ResourceLockPlugin::get()->shouldLimitAccessToResourceLockManager()) {
-            return Gate::allows(ResourceLockPlugin::get()->getGate());
+            $gate = ResourceLockPlugin::get()->getGate();
+
+            return $gate !== null && Gate::allows($gate);
         }
 
         return true;
@@ -109,7 +112,9 @@ class LockResource extends Resource
     public static function canDeleteAny(): bool
     {
         if (ResourceLockPlugin::get()->shouldLimitAccessToResourceLockManager()) {
-            return Gate::allows(ResourceLockPlugin::get()->getGate());
+            $gate = ResourceLockPlugin::get()->getGate();
+
+            return $gate !== null && Gate::allows($gate);
         }
 
         return true;
