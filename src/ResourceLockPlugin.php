@@ -9,7 +9,6 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
 use Blendbyte\FilamentResourceLock\Resources\LockResource;
-use Livewire\Livewire;
 
 class ResourceLockPlugin implements Plugin
 {
@@ -85,8 +84,6 @@ class ResourceLockPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        Livewire::component('filament-resource-lock-observer', Http\Livewire\ResourceLockObserver::class);
-
         FilamentView::registerRenderHook(
             PanelsRenderHook::PAGE_START,
             fn (): string => Blade::render('@livewire(\'filament-resource-lock-observer\')'),
