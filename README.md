@@ -74,6 +74,23 @@ class ManagePosts extends ManageRecords
 }
 ```
 
+### Relation manager locking
+
+To lock related records when editing them via a relation manager, add `UsesRelationManagerResourceLock` to your relation manager class. The related model also needs the `HasLocks` trait.
+
+```php
+use Blendbyte\FilamentResourceLock\Resources\Pages\Concerns\UsesRelationManagerResourceLock;
+
+class PostCommentsRelationManager extends RelationManager
+{
+    use UsesRelationManagerResourceLock;
+
+    protected static string $relationship = 'comments';
+}
+```
+
+When a user opens the edit modal for a related record, it is locked for the duration of the edit session and released when the modal is closed.
+
 ## Polling (SPA mode)
 
 To support SPA mode, enable polling-based presence detection in the plugin:

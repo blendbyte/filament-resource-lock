@@ -12,7 +12,7 @@
                 ['modal-closed'].forEach(eventType => {
                     container.addEventListener(eventType, event => {
                         if (event.detail.id.endsWith('-table-action')) {
-                            Livewire.dispatch('resourceLockObserver::unload')
+                            Livewire.dispatch('resourceLockObserver::unloadSimple')
                         }
                     });
                 });
@@ -43,7 +43,7 @@
         window.addEventListener('close-modal', event => {
 
             if (event.detail.id.endsWith('-table-action')) {
-                Livewire.dispatch('resourceLockObserver::unload')
+                Livewire.dispatch('resourceLockObserver::unloadSimple')
             }
         });
     </script>

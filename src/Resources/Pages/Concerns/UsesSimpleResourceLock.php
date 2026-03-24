@@ -45,7 +45,7 @@ trait UsesSimpleResourceLock
         return null;
     }
 
-    #[On('resourceLockObserver::unload')]
+    #[On('resourceLockObserver::unloadSimple')]
     public function resourceLockObserverUnload()
     {
         $this->resourceRecord->unlock();

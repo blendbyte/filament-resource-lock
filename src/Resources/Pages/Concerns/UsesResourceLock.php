@@ -42,9 +42,12 @@ trait UsesResourceLock
     #[On('resourceLockObserver::unlock')]
     public function resourceLockObserverUnlock()
     {
-        if ($this->record->unlock(force: true)) {
-            $this->closeLockedResourceModal();
-            $this->record->lock();
+        if (is_null($this->activeRelationManager ?? null)) {
+            if ($this->record->unlock(force: true)) {
+                $this->closeLockedResourceModal();
+                $this->record->refresh();
+                $this->record->lock();
+            }
         }
     }
 
