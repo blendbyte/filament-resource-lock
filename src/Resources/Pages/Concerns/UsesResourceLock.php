@@ -26,6 +26,17 @@ trait UsesResourceLock
         $this->returnUrl = $this->getResource()::getUrl('index');
         $this->initializeResourceLock($this->record);
         $this->setupPolling();
+
+        if ($this->isReadOnly) {
+            $this->form->disabled();
+        }
+    }
+
+    #[On('resourceLockObserver::renewLock')]
+    public function renewLock()
+    {
+        parent::renewLock();
+        $this->form->disabled($this->isReadOnly);
     }
 
     #[On('resourceLockObserver::unload')]
@@ -69,6 +80,15 @@ trait UsesResourceLock
         }
 
         parent::save($shouldRedirect, $shouldSendSavedNotification);
+    }
+
+    protected function getFormActions(): array
+    {
+        if ($this->isReadOnly) {
+            return [];
+        }
+
+        return parent::getFormActions();
     }
 
     public function getResourceLockOwner(): void
