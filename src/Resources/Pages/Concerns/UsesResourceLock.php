@@ -61,6 +61,10 @@ trait UsesResourceLock
                 $this->closeLockedResourceModal();
                 $this->record->refresh();
                 $this->record->lock();
+
+                $this->isReadOnly = false;
+                $this->resourceLockOwner = null;
+                $this->form->disabled(false);
             }
         }
     }
@@ -111,11 +115,13 @@ trait UsesResourceLock
 
     public function getResourceLockOwner(): void
     {
-        if ($this->record?->resourceLock && ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
-            $getResourceLockOwnerActionClass = ResourceLockPlugin::get()->getResourceLockOwnerAction();
-            $getResourceLockOwnerAction = app($getResourceLockOwnerActionClass);
+        if (! $this->record?->resourceLock) {
+            return;
+        }
 
-            $this->resourceLockOwner = $getResourceLockOwnerAction->execute($this->record->resourceLock->user);
+        if ($this->isReadOnly || ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
+            $action = app(ResourceLockPlugin::get()->getResourceLockOwnerAction());
+            $this->resourceLockOwner = $action->execute($this->record->resourceLock->user);
         }
     }
 }
