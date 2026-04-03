@@ -2,6 +2,7 @@
 
 namespace Blendbyte\FilamentResourceLock\Tables\Columns;
 
+use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 use Filament\Tables\Columns\IconColumn;
 
 class ResourceLockColumn extends IconColumn
@@ -43,5 +44,24 @@ class ResourceLockColumn extends IconColumn
         });
 
         $this->label(__('filament-resource-lock::table.lock'));
+
+        $this->tooltip(function ($record, ?string $state): ?string {
+            if ($state === null) {
+                return null;
+            }
+
+            if ($state === 'locked_by_me') {
+                return __('filament-resource-lock::table.locked_by_you');
+            }
+
+            if (ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
+                $actionClass = ResourceLockPlugin::get()->getResourceLockOwnerAction();
+                $name = app($actionClass)->execute($record->resourceLock->user);
+
+                return __('filament-resource-lock::table.locked_by', ['name' => $name]);
+            }
+
+            return __('filament-resource-lock::table.locked_by_other');
+        });
     }
 }
