@@ -30,6 +30,8 @@ trait UsesResourceLock
         if ($this->isReadOnly) {
             $this->form->disabled();
         }
+
+        $this->syncReadOnlyNotification();
     }
 
     #[On('resourceLockObserver::renewLock')]
@@ -37,6 +39,7 @@ trait UsesResourceLock
     {
         parent::renewLock();
         $this->form->disabled($this->isReadOnly);
+        $this->syncReadOnlyNotification();
     }
 
     #[On('resourceLockObserver::unload')]
@@ -89,6 +92,21 @@ trait UsesResourceLock
         }
 
         return parent::getFormActions();
+    }
+
+    protected function syncReadOnlyNotification(): void
+    {
+        if ($this->isReadOnly) {
+            $title = $this->resourceLockOwner
+                ? __('filament-resource-lock::read-only.banner_heading_user', ['user' => $this->resourceLockOwner])
+                : __('filament-resource-lock::read-only.banner_heading');
+
+            \Filament\Notifications\Notification::make('resource_lock_readonly')
+                ->warning()
+                ->title($title)
+                ->persistent()
+                ->send();
+        }
     }
 
     public function getResourceLockOwner(): void
