@@ -1,7 +1,12 @@
 <?php
 
+use Blendbyte\FilamentResourceLock\Events\ResourceLockExpired;
+use Blendbyte\FilamentResourceLock\Events\ResourceLockForceUnlocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceLocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceUnlocked;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Event;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseCount;
@@ -211,4 +216,129 @@ it('prevents multiple users from locking when expired locks exist', function () 
         ->toBeFalse()
         ->and($post->lock())
         ->toBeFalse();
+});
+
+describe('Lock Events', function () {
+    it('dispatches ResourceLocked when a new lock is acquired', function () {
+        Event::fake();
+
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+
+        $post->lock();
+
+        Event::assertDispatched(ResourceLocked::class, function ($event) use ($post, $user) {
+            return $event->lockable->id === $post->id
+                && $event->userId === $user->id;
+        });
+    });
+
+    it('does not dispatch ResourceLocked on keepalive touch', function () {
+        Event::fake();
+
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+
+        $post->lock();
+        $post->refresh();
+        sleep(1);
+        $post->lock(); // keepalive
+
+        Event::assertDispatchedTimes(ResourceLocked::class, 1);
+    });
+
+    it('dispatches ResourceLockExpired then ResourceLocked when a new lock overwrites an expired one', function () {
+        Event::fake();
+
+        $user1 = createUser();
+        $user2 = createUser();
+        $post = createPost();
+        createExpiredResourceLock($user1, $post);
+
+        actingAs($user2);
+        $post->refresh();
+        $post->lock();
+
+        Event::assertDispatched(ResourceLockExpired::class, function ($event) use ($post, $user1) {
+            return $event->lockable->id === $post->id
+                && $event->originalUserId === $user1->id;
+        });
+
+        Event::assertDispatched(ResourceLocked::class, function ($event) use ($post, $user2) {
+            return $event->lockable->id === $post->id
+                && $event->userId === $user2->id;
+        });
+    });
+
+    it('dispatches ResourceUnlocked on natural unlock by owner', function () {
+        Event::fake();
+
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+        $post->lock();
+        $post->refresh();
+
+        $post->unlock();
+
+        Event::assertDispatched(ResourceUnlocked::class, function ($event) use ($post, $user) {
+            return $event->lockable->id === $post->id
+                && $event->userId === $user->id;
+        });
+        Event::assertNotDispatched(ResourceLockForceUnlocked::class);
+    });
+
+    it('does not dispatch ResourceUnlocked when unlock is rejected', function () {
+        Event::fake();
+
+        $user1 = createUser();
+        actingAs($user1);
+        $post = createPost();
+        $post->lock();
+
+        $user2 = createUser();
+        actingAs($user2);
+        $post->refresh();
+        $post->unlock(force: false);
+
+        Event::assertNotDispatched(ResourceUnlocked::class);
+        Event::assertNotDispatched(ResourceLockForceUnlocked::class);
+    });
+
+    it('dispatches ResourceLockForceUnlocked with correct user IDs on force unlock', function () {
+        Event::fake();
+
+        $user1 = createUser();
+        actingAs($user1);
+        $post = createPost();
+        $post->lock();
+
+        $user2 = createUser();
+        actingAs($user2);
+        $post->refresh();
+        $post->unlock(force: true);
+
+        Event::assertDispatched(ResourceLockForceUnlocked::class, function ($event) use ($post, $user1, $user2) {
+            return $event->lockable->id === $post->id
+                && $event->originalUserId === $user1->id
+                && $event->actorUserId === $user2->id;
+        });
+        Event::assertNotDispatched(ResourceUnlocked::class);
+    });
+
+    it('dispatches no events when events are disabled via config', function () {
+        Event::fake([ResourceLocked::class, ResourceUnlocked::class, ResourceLockExpired::class, ResourceLockForceUnlocked::class]);
+        config(['filament-resource-lock.events.enabled' => false]);
+
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+        $post->lock();
+        $post->refresh();
+        $post->unlock();
+
+        Event::assertNothingDispatched();
+    });
 });

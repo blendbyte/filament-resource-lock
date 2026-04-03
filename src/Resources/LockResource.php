@@ -2,10 +2,13 @@
 
 namespace Blendbyte\FilamentResourceLock\Resources;
 
+use Blendbyte\FilamentResourceLock\Events\ResourceLockForceUnlocked;
+use Blendbyte\FilamentResourceLock\Models\ResourceLock;
 use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 use Blendbyte\FilamentResourceLock\Resources\LockResource\ManageResourceLocks;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Illuminate\Support\Collection;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -76,12 +79,32 @@ class LockResource extends Resource
             ])
             ->recordActions([
                 DeleteAction::make()
+                    ->before(function (ResourceLock $record) {
+                        if (config('filament-resource-lock.events.enabled', true)) {
+                            ResourceLockForceUnlocked::dispatch(
+                                $record->lockable,
+                                $record->user_id,
+                                auth()->id()
+                            );
+                        }
+                    })
                     ->icon('heroicon-o-lock-open')
                     ->successNotificationTitle(__('filament-resource-lock::manager.unlocked'))
                     ->label(__('filament-resource-lock::manager.unlock')),
             ])
             ->toolbarActions([
                 DeleteBulkAction::make()
+                    ->before(function (Collection $records) {
+                        if (config('filament-resource-lock.events.enabled', true)) {
+                            $records->each(function (ResourceLock $record) {
+                                ResourceLockForceUnlocked::dispatch(
+                                    $record->lockable,
+                                    $record->user_id,
+                                    auth()->id()
+                                );
+                            });
+                        }
+                    })
                     ->deselectRecordsAfterCompletion()
                     ->requiresConfirmation()
                     ->icon('heroicon-o-lock-open')
