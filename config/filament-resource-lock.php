@@ -131,4 +131,20 @@ return [
     'actions' => [
         'get_resource_lock_owner_action' => GetResourceLockOwnerAction::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Events
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the package dispatches Laravel events for every lock
+    | lifecycle transition: ResourceLocked, ResourceUnlocked,
+    | ResourceLockExpired, and ResourceLockForceUnlocked.
+    | Set to false to disable all event dispatching globally.
+    |
+    */
+
+    'events' => [
+        'enabled' => true,
+    ],
 ];

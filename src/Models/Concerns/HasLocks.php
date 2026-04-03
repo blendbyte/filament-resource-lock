@@ -2,6 +2,10 @@
 
 namespace Blendbyte\FilamentResourceLock\Models\Concerns;
 
+use Blendbyte\FilamentResourceLock\Events\ResourceLockExpired;
+use Blendbyte\FilamentResourceLock\Events\ResourceLockForceUnlocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceLocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceUnlocked;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
 use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 use Filament\Facades\Filament;
@@ -29,11 +33,26 @@ trait HasLocks
     public function lock(): bool
     {
         if ($this->isUnlocked()) {
+            // An expired record exists — dispatch expiry event, clean it up
+            if ($this->resourceLock !== null && $this->resourceLock->isExpired()) {
+                $expiredUserId = $this->resourceLock->user_id;
+                $this->resourceLock()->delete();
+                $this->unsetRelation('resourceLock');
+
+                if (config('filament-resource-lock.events.enabled', true)) {
+                    ResourceLockExpired::dispatch($this, $expiredUserId);
+                }
+            }
+
             $resourceLockModel = ResourceLockPlugin::get()->getResourceLockModel();
             $guard = $this->getCurrentAuthGuardName();
             $resourceLock = new $resourceLockModel;
             $resourceLock->user_id = auth()->guard($guard)->user()->id;
             $this->resourceLock()->save($resourceLock);
+
+            if (config('filament-resource-lock.events.enabled', true)) {
+                ResourceLocked::dispatch($this, $resourceLock->user_id);
+            }
 
             return true;
         }
@@ -112,7 +131,16 @@ trait HasLocks
     {
         if ($this->isLocked()) {
             if ($force || $this->lockCreatedByCurrentUser() || $this->hasExpiredLock()) {
+                $originalUserId = $this->resourceLock->user_id;
                 $this->resourceLock()->delete();
+
+                if (config('filament-resource-lock.events.enabled', true)) {
+                    if ($force) {
+                        ResourceLockForceUnlocked::dispatch($this, $originalUserId, auth()->id());
+                    } else {
+                        ResourceUnlocked::dispatch($this, $originalUserId);
+                    }
+                }
 
                 return true;
             }

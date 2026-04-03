@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 /**
+ * @property int|string $user_id
  * @property Carbon|null $updated_at
  */
 class ResourceLock extends Model

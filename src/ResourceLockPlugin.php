@@ -57,6 +57,8 @@ class ResourceLockPlugin implements Plugin
 
     protected bool $pollingVisible = false;
 
+    protected ?bool $eventsEnabled = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -353,5 +355,17 @@ class ResourceLockPlugin implements Plugin
     public function shouldUsePollingVisible(): bool
     {
         return $this->pollingVisible ?? false;
+    }
+
+    public function enableEvents(bool $enable = true): static
+    {
+        $this->eventsEnabled = $enable;
+
+        return $this;
+    }
+
+    public function shouldDispatchEvents(): bool
+    {
+        return $this->eventsEnabled ?? config('filament-resource-lock.events.enabled', true);
     }
 }
