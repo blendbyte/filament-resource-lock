@@ -74,6 +74,8 @@ class ResourceLockPlugin implements Plugin
 
     protected ?bool $shouldRegisterAuditNavigation = null;
 
+    protected ?bool $readOnlyWhenLocked = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -467,5 +469,18 @@ class ResourceLockPlugin implements Plugin
     public function shouldRegisterAuditNavigation(): bool
     {
         return $this->shouldRegisterAuditNavigation ?? config('filament-resource-lock.audit.should_register_navigation', true);
+    }
+
+    public function readOnlyWhenLocked(bool $enabled = true): static
+    {
+        $this->readOnlyWhenLocked = $enabled;
+
+        return $this;
+    }
+
+    public function shouldUseReadOnlyMode(): bool
+    {
+        return $this->readOnlyWhenLocked
+            ?? config('filament-resource-lock.read_only_mode.enabled', false);
     }
 }

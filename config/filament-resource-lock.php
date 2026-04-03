@@ -68,6 +68,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Read-Only Mode
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, locked resources will be displayed in read-only mode
+    | instead of showing the lock modal. Users will be able to view the
+    | resource but will not be able to make any changes.
+    |
+    */
+
+    'read_only_mode' => [
+        'enabled' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Resource Lock Manager
     |--------------------------------------------------------------------------
     |
