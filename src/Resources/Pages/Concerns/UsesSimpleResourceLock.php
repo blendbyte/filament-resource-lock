@@ -21,9 +21,22 @@ trait UsesSimpleResourceLock
     {
         parent::mountTableAction($name, $record);
         $this->resourceRecord = $this->getMountedTableActionRecord();
-
         $this->returnUrl = $this->getResource()::getUrl('index');
         $this->initializeResourceLock($this->resourceRecord);
+
+        if ($this->isReadOnly) {
+            $owner = $this->resourceLockOwner;
+            \Filament\Notifications\Notification::make()
+                ->warning()
+                ->title($owner
+                    ? __('filament-resource-lock::read-only.banner_heading_user', ['user' => $owner])
+                    : __('filament-resource-lock::read-only.banner_heading'))
+                ->send();
+            $this->isReadOnly = false;
+
+            return null;
+        }
+
         $this->setupPolling();
 
         return null;
@@ -63,7 +76,11 @@ trait UsesSimpleResourceLock
 
     public function getResourceLockOwner(): void
     {
-        if ($this->resourceRecord?->resourceLock && ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
+        if (! $this->resourceRecord?->resourceLock) {
+            return;
+        }
+
+        if ($this->isReadOnly || ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
             $getResourceLockOwnerActionClass = ResourceLockPlugin::get()->getResourceLockOwnerAction();
             $getResourceLockOwnerAction = app($getResourceLockOwnerActionClass);
 
