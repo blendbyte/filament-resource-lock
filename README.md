@@ -248,6 +248,23 @@ To enable audit logging but hide the built-in resource (e.g. you have a custom U
 
 ## Configuration
 
+### Per-model lock timeout
+
+Declare a `$lockTimeout` property (in seconds) on any model using `HasLocks` to override the global default for that model:
+
+```php
+use Blendbyte\FilamentResourceLock\Models\Concerns\HasLocks;
+
+class Post extends Model
+{
+    use HasLocks;
+
+    protected int $lockTimeout = 30; // seconds, overrides the global default
+}
+```
+
+The global default (`lock_timeout` in config, or `->lockTimeout()` on the plugin) is used for all models that do not declare their own property.
+
 ### Access control
 
 Restrict access to the Unlock button or resource manager using a gate or Spatie permission:
