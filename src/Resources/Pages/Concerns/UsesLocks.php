@@ -2,6 +2,7 @@
 
 namespace Blendbyte\FilamentResourceLock\Resources\Pages\Concerns;
 
+use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 use Livewire\Attributes\On;
 
 /**
@@ -14,6 +15,8 @@ trait UsesLocks
     public ?string $resourceLockOwner = null;
 
     public ?string $resourceType = null;
+
+    public bool $isReadOnly = false;
 
     public function initializeResourceLock($record): void
     {
@@ -38,6 +41,12 @@ trait UsesLocks
         }
 
         // Locked by another user and not expired
+        if (ResourceLockPlugin::get()->shouldUseReadOnlyMode()) {
+            $this->getResourceLockOwner();
+            $this->isReadOnly = true;
+
+            return;
+        }
         $this->openLockedResourceModal();
     }
 
@@ -57,6 +66,12 @@ trait UsesLocks
         $this->resourceLockType = class_basename($record);
 
         if ($this->isLockedByOtherUser($record)) {
+            if (ResourceLockPlugin::get()->shouldUseReadOnlyMode()) {
+                $this->getResourceLockOwner();
+                $this->isReadOnly = true;
+
+                return;
+            }
             $this->openLockedResourceModal();
         } else {
             $record->lock();
@@ -92,8 +107,13 @@ trait UsesLocks
             return;
         }
 
-        if ($record->isUnlocked()) {
+        if ($record->isUnlocked() || $record->hasExpiredLock()) {
+            if ($record->hasExpiredLock()) {
+                $record->unlock();
+            }
             $record->lock();
+            $this->isReadOnly = false;
+            $this->resourceLockOwner = null;
 
             return;
         }
@@ -101,7 +121,12 @@ trait UsesLocks
         if ($record->isLockedByCurrentUser()) {
             $record->lock(); // Refresh/extend the lock
         } else {
-            $this->openLockedResourceModal();
+            if (ResourceLockPlugin::get()->shouldUseReadOnlyMode()) {
+                $this->getResourceLockOwner();
+                $this->isReadOnly = true;
+            } else {
+                $this->openLockedResourceModal();
+            }
         }
     }
 
