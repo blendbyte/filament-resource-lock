@@ -322,6 +322,28 @@ public function resourceLockReturnUrl(): string
 }
 ```
 
+## Scheduled auto-clear
+
+The package automatically registers a scheduled task that runs `filament-resource-lock:clear-expired --force` **every hour**. This is enabled by default (opt-out).
+
+To disable it and manage the schedule yourself:
+
+```php
+// config/filament-resource-lock.php
+'schedule' => [
+    'auto_clear_expired' => false,
+],
+```
+
+Then register it manually with whatever frequency suits your app:
+
+```php
+// app/Console/Kernel.php  (or a ServiceProvider using Schedule)
+$schedule->command('filament-resource-lock:clear-expired --force')->everyThirtyMinutes();
+```
+
+> **Note:** Laravel's scheduler requires a cron entry on your server: `* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1`
+
 ## Publishing assets
 
 ```bash

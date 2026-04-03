@@ -169,4 +169,19 @@ return [
         'navigation_sort' => 2,
         'should_register_navigation' => true,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Schedule
+    |--------------------------------------------------------------------------
+    |
+    | When auto_clear_expired is enabled, the package registers a scheduled
+    | task that runs filament-resource-lock:clear-expired --force every hour.
+    | Set to false to manage the schedule yourself.
+    |
+    */
+
+    'schedule' => [
+        'auto_clear_expired' => true,
+    ],
 ];
