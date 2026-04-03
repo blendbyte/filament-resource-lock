@@ -147,4 +147,26 @@ return [
     'events' => [
         'enabled' => true,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Audit Trail
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, the package writes a row to resource_lock_audit for every
+    | lock lifecycle event (locked, unlocked, expired, force_unlocked).
+    | Requires events.enabled to be true, as the audit trail is powered by
+    | Laravel events. Set to false to disable audit logging globally.
+    |
+    */
+
+    'audit' => [
+        'enabled' => false,
+        'navigation_icon' => 'heroicon-o-clipboard-document-list',
+        'navigation_label' => 'Lock Audit Log',
+        'plural_label' => 'Lock Audit Logs',
+        'navigation_group' => null,
+        'navigation_sort' => 2,
+        'should_register_navigation' => true,
+    ],
 ];

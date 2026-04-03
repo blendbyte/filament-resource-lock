@@ -4,6 +4,8 @@ namespace Blendbyte\FilamentResourceLock;
 
 use Blendbyte\FilamentResourceLock\Console\Commands\ResourceLockClearCommand;
 use Blendbyte\FilamentResourceLock\Console\Commands\ResourceLockClearExpiredCommand;
+use Blendbyte\FilamentResourceLock\Listeners\AuditResourceLockEventSubscriber;
+use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
 use Spatie\LaravelPackageTools\Package;
@@ -25,6 +27,8 @@ class ResourceLockServiceProvider extends PackageServiceProvider
         parent::packageBooted();
 
         Livewire::component('filament-resource-lock-observer', Http\Livewire\ResourceLockObserver::class);
+
+        Event::subscribe(AuditResourceLockEventSubscriber::class);
     }
 
     public function configurePackage(Package $package): void
@@ -34,6 +38,7 @@ class ResourceLockServiceProvider extends PackageServiceProvider
             ->hasTranslations()
             ->hasConfigFile()
             ->hasMigration('create_resource_lock_table')
+            ->hasMigration('create_resource_lock_audit_table')
             ->hasInstallCommand(function (InstallCommand $command) {
                 $command
                     ->publishMigrations()

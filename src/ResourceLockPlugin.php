@@ -4,6 +4,7 @@ namespace Blendbyte\FilamentResourceLock;
 
 use Blendbyte\FilamentResourceLock\Actions\GetResourceLockOwnerAction;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
+use Blendbyte\FilamentResourceLock\Resources\AuditResource;
 use Blendbyte\FilamentResourceLock\Resources\LockResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
@@ -59,6 +60,20 @@ class ResourceLockPlugin implements Plugin
 
     protected ?bool $eventsEnabled = null;
 
+    protected ?bool $auditEnabled = null;
+
+    protected ?string $auditNavigationIcon = null;
+
+    protected ?string $auditNavigationLabel = null;
+
+    protected ?string $auditPluralLabel = null;
+
+    protected ?string $auditNavigationGroup = null;
+
+    protected ?int $auditNavigationSort = null;
+
+    protected ?bool $shouldRegisterAuditNavigation = null;
+
     public static function make(): static
     {
         return app(static::class);
@@ -82,6 +97,7 @@ class ResourceLockPlugin implements Plugin
         $panel
             ->resources([
                 $this->getResourceClass(),
+                AuditResource::class,
             ]);
     }
 
@@ -367,5 +383,89 @@ class ResourceLockPlugin implements Plugin
     public function shouldDispatchEvents(): bool
     {
         return $this->eventsEnabled ?? config('filament-resource-lock.events.enabled', true);
+    }
+
+    public function enableAudit(bool $enable = true): static
+    {
+        $this->auditEnabled = $enable;
+
+        return $this;
+    }
+
+    public function shouldAuditEvents(): bool
+    {
+        return $this->auditEnabled ?? config('filament-resource-lock.audit.enabled', false);
+    }
+
+    public function auditNavigationIcon(?string $icon): static
+    {
+        $this->auditNavigationIcon = $icon;
+
+        return $this;
+    }
+
+    public function getAuditNavigationIcon(): ?string
+    {
+        return $this->auditNavigationIcon ?? config('filament-resource-lock.audit.navigation_icon', 'heroicon-o-clipboard-document-list');
+    }
+
+    public function auditNavigationLabel(?string $label): static
+    {
+        $this->auditNavigationLabel = $label;
+
+        return $this;
+    }
+
+    public function getAuditNavigationLabel(): string
+    {
+        return __($this->auditNavigationLabel ?? config('filament-resource-lock.audit.navigation_label', 'Lock Audit Log'));
+    }
+
+    public function auditPluralLabel(?string $label): static
+    {
+        $this->auditPluralLabel = $label;
+
+        return $this;
+    }
+
+    public function getAuditPluralLabel(): string
+    {
+        return __($this->auditPluralLabel ?? config('filament-resource-lock.audit.plural_label', 'Lock Audit Logs'));
+    }
+
+    public function auditNavigationGroup(?string $group): static
+    {
+        $this->auditNavigationGroup = $group;
+
+        return $this;
+    }
+
+    public function getAuditNavigationGroup(): ?string
+    {
+        return $this->auditNavigationGroup ?? config('filament-resource-lock.audit.navigation_group');
+    }
+
+    public function auditNavigationSort(?int $sort): static
+    {
+        $this->auditNavigationSort = $sort;
+
+        return $this;
+    }
+
+    public function getAuditNavigationSort(): ?int
+    {
+        return $this->auditNavigationSort ?? config('filament-resource-lock.audit.navigation_sort', 2);
+    }
+
+    public function registerAuditNavigation(bool $register = true): static
+    {
+        $this->shouldRegisterAuditNavigation = $register;
+
+        return $this;
+    }
+
+    public function shouldRegisterAuditNavigation(): bool
+    {
+        return $this->shouldRegisterAuditNavigation ?? config('filament-resource-lock.audit.should_register_navigation', true);
     }
 }

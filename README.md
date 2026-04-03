@@ -147,6 +147,105 @@ Additional polling options:
 
 The package includes a UI to view and manage all active and expired locks, and to unlock resources individually or in bulk.
 
+## Laravel Events
+
+The package dispatches Laravel events for every lock lifecycle transition. Events are **enabled by default** and can be consumed by any standard Laravel listener.
+
+| Event | Payload |
+|---|---|
+| `ResourceLocked` | `$lockable`, `$userId` |
+| `ResourceUnlocked` | `$lockable`, `$userId` |
+| `ResourceLockExpired` | `$lockable`, `$originalUserId` |
+| `ResourceLockForceUnlocked` | `$lockable`, `$originalUserId`, `$actorUserId` |
+
+Register a listener in your `AppServiceProvider` or `EventServiceProvider`:
+
+```php
+use Blendbyte\FilamentResourceLock\Events\ResourceLocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceUnlocked;
+use Blendbyte\FilamentResourceLock\Events\ResourceLockForceUnlocked;
+
+Event::listen(ResourceLocked::class, function (ResourceLocked $event) {
+    // $event->lockable — the model that was locked
+    // $event->userId   — the user who acquired the lock
+});
+```
+
+To disable all event dispatching:
+
+```php
+// config/filament-resource-lock.php
+'events' => [
+    'enabled' => false,
+],
+```
+
+Or via the plugin fluent API:
+
+```php
+->plugin(ResourceLockPlugin::make()
+    ->enableEvents(false)
+)
+```
+
+## Audit Trail
+
+The audit trail records every lock lifecycle event to a `resource_lock_audit` table, giving you a permanent, queryable history of who locked what and when.
+
+Audit logging is **opt-in** (`audit.enabled` defaults to `false`) and requires `events.enabled` to be `true`, as it is powered by the event system.
+
+### Enabling the audit trail
+
+Publish and run the migration (if not already done via `filament-resource-lock:install`):
+
+```bash
+php artisan vendor:publish --tag="filament-resource-lock-migrations"
+php artisan migrate
+```
+
+Enable audit logging in your config:
+
+```php
+// config/filament-resource-lock.php
+'audit' => [
+    'enabled' => true,
+],
+```
+
+Or via the plugin fluent API:
+
+```php
+->plugin(ResourceLockPlugin::make()
+    ->enableAudit()
+)
+```
+
+### Audit Resource
+
+When `audit.enabled` is `true`, a read-only **Lock Audit Log** resource becomes visible in your Filament panel. It displays all recorded events with a colour-coded action badge, filterable by action type and date range.
+
+The audit resource navigation can be customised independently of the lock manager:
+
+```php
+->plugin(ResourceLockPlugin::make()
+    ->enableAudit()
+    ->auditNavigationLabel('Lock History')
+    ->auditNavigationIcon('heroicon-o-clock')
+    ->auditNavigationGroup('Security')
+    ->auditNavigationSort(3)
+)
+```
+
+To enable audit logging but hide the built-in resource (e.g. you have a custom UI):
+
+```php
+// config/filament-resource-lock.php
+'audit' => [
+    'enabled' => true,
+    'should_register_navigation' => false,
+],
+```
+
 ## Configuration
 
 ### Access control

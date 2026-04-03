@@ -44,6 +44,9 @@ class TestCase extends Orchestra
         $migration = include __DIR__.'/../database/migrations/create_resource_lock_table.php.stub';
         $migration->up();
 
+        $migration = include __DIR__.'/../database/migrations/create_resource_lock_audit_table.php.stub';
+        $migration->up();
+
         $migration = include __DIR__.'/Migrations/post_migration.php';
         $migration->up();
 
