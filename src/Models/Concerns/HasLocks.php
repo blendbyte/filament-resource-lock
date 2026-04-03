@@ -34,7 +34,7 @@ trait HasLocks
     {
         if ($this->isUnlocked()) {
             // An expired record exists — dispatch expiry event, clean it up
-            if ($this->resourceLock !== null && $this->resourceLock->isExpired()) {
+            if ($this->resourceLock !== null && $this->resourceLock->isExpired($this->getLockTimeout())) {
                 $expiredUserId = $this->resourceLock->user_id;
                 $this->resourceLock()->delete();
                 $this->unsetRelation('resourceLock');
@@ -94,7 +94,7 @@ trait HasLocks
             return false;
         }
 
-        return $this->resourceLock->exists() && ! $this->resourceLock->isExpired();
+        return $this->resourceLock->exists() && ! $this->resourceLock->isExpired($this->getLockTimeout());
     }
 
     /**
@@ -118,7 +118,7 @@ trait HasLocks
             return true;
         }
 
-        return $this->resourceLock->isExpired();
+        return $this->resourceLock->isExpired($this->getLockTimeout());
     }
 
     /**
@@ -159,6 +159,19 @@ trait HasLocks
         $guard = $this->getCurrentAuthGuardName();
 
         return $this->resourceLock->user_id === auth()->guard($guard)->user()->id;
+    }
+
+    /**
+     * Get the lock timeout for this model in seconds.
+     * Declare a $lockTimeout property on your model to override the global default.
+     */
+    public function getLockTimeout(): int
+    {
+        if (property_exists($this, 'lockTimeout')) {
+            return $this->lockTimeout;
+        }
+
+        return config('filament-resource-lock.lock_timeout', 600);
     }
 
     /**

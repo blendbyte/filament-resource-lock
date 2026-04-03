@@ -5,6 +5,7 @@ use Blendbyte\FilamentResourceLock\Events\ResourceLockForceUnlocked;
 use Blendbyte\FilamentResourceLock\Events\ResourceLocked;
 use Blendbyte\FilamentResourceLock\Events\ResourceUnlocked;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
+use Blendbyte\FilamentResourceLock\Tests\Resources\Models\PostWithShortTimeout;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 
@@ -216,6 +217,97 @@ it('prevents multiple users from locking when expired locks exist', function () 
         ->toBeFalse()
         ->and($post->lock())
         ->toBeFalse();
+});
+
+describe('Per-Model Lock Timeout', function () {
+    it('returns the model lockTimeout property when declared', function () {
+        $post = new PostWithShortTimeout;
+
+        expect($post->getLockTimeout())->toBe(10);
+    });
+
+    it('falls back to the global config timeout when no property is declared', function () {
+        $post = createPost();
+        config(['filament-resource-lock.lock_timeout' => 300]);
+
+        expect($post->getLockTimeout())->toBe(300);
+    });
+
+    it('considers a lock expired based on the model timeout, not the global timeout', function () {
+        $user = createUser();
+        actingAs($user);
+
+        $post = (new PostWithShortTimeout)->forceFill([
+            'title' => fake()->paragraph,
+            'slug' => fake()->slug,
+            'body' => fake()->text,
+        ]);
+        $post->save();
+
+        // Create a lock 15 seconds old — expired for 10s model timeout, active for global 600s
+        $resourceLock = (new ResourceLock)->forceFill([
+            'updated_at' => Carbon::now()->subSeconds(15),
+            'user_id' => $user->id,
+            'lockable_type' => PostWithShortTimeout::class,
+            'lockable_id' => $post->id,
+        ]);
+        $resourceLock->save();
+        $post->refresh();
+
+        expect($post->isLocked())->toBeFalse()
+            ->and($post->hasExpiredLock())->toBeTrue();
+    });
+
+    it('considers a lock active when within the model timeout window', function () {
+        $user = createUser();
+        actingAs($user);
+
+        $post = (new PostWithShortTimeout)->forceFill([
+            'title' => fake()->paragraph,
+            'slug' => fake()->slug,
+            'body' => fake()->text,
+        ]);
+        $post->save();
+
+        // Create a lock 5 seconds old — active for 10s model timeout
+        $resourceLock = (new ResourceLock)->forceFill([
+            'updated_at' => Carbon::now()->subSeconds(5),
+            'user_id' => $user->id,
+            'lockable_type' => PostWithShortTimeout::class,
+            'lockable_id' => $post->id,
+        ]);
+        $resourceLock->save();
+        $post->refresh();
+
+        expect($post->isLocked())->toBeTrue();
+    });
+
+    it('uses model timeout when locking over an expired lock', function () {
+        $user1 = createUser();
+        $user2 = createUser();
+
+        $post = (new PostWithShortTimeout)->forceFill([
+            'title' => fake()->paragraph,
+            'slug' => fake()->slug,
+            'body' => fake()->text,
+        ]);
+        $post->save();
+
+        // Create a lock 15 seconds old — expired by model's 10s timeout
+        (new ResourceLock)->forceFill([
+            'updated_at' => Carbon::now()->subSeconds(15),
+            'user_id' => $user1->id,
+            'lockable_type' => PostWithShortTimeout::class,
+            'lockable_id' => $post->id,
+        ])->save();
+
+        actingAs($user2);
+        $post->refresh();
+
+        // user2 should be able to acquire the lock since it's expired by model timeout
+        expect($post->lock())->toBeTrue()
+            ->and($post->refresh()->isLockedByCurrentUser())->toBeTrue();
+    });
 });
 
 describe('Lock Events', function () {
