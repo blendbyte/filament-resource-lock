@@ -107,7 +107,7 @@ class AuditResource extends Resource
                     ]),
                 Filter::make('created_at')
                     ->label(__('filament-resource-lock::audit.filters.created_at'))
-                    ->form([
+                    ->schema([
                         DatePicker::make('from')
                             ->label(__('filament-resource-lock::audit.filters.from')),
                         DatePicker::make('until')
