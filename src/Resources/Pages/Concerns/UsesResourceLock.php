@@ -26,6 +26,20 @@ trait UsesResourceLock
         $this->returnUrl = $this->getResource()::getUrl('index');
         $this->initializeResourceLock($this->record);
         $this->setupPolling();
+
+        if ($this->isReadOnly) {
+            $this->form->disabled();
+        }
+
+        $this->syncReadOnlyNotification();
+    }
+
+    #[On('resourceLockObserver::renewLock')]
+    public function renewLock()
+    {
+        parent::renewLock();
+        $this->form->disabled($this->isReadOnly);
+        $this->syncReadOnlyNotification();
     }
 
     #[On('resourceLockObserver::unload')]
@@ -47,6 +61,10 @@ trait UsesResourceLock
                 $this->closeLockedResourceModal();
                 $this->record->refresh();
                 $this->record->lock();
+
+                $this->isReadOnly = false;
+                $this->resourceLockOwner = null;
+                $this->form->disabled(false);
             }
         }
     }
@@ -71,13 +89,39 @@ trait UsesResourceLock
         parent::save($shouldRedirect, $shouldSendSavedNotification);
     }
 
+    protected function getFormActions(): array
+    {
+        if ($this->isReadOnly) {
+            return [];
+        }
+
+        return parent::getFormActions();
+    }
+
+    protected function syncReadOnlyNotification(): void
+    {
+        if ($this->isReadOnly) {
+            $title = $this->resourceLockOwner
+                ? __('filament-resource-lock::read-only.banner_heading_user', ['user' => $this->resourceLockOwner])
+                : __('filament-resource-lock::read-only.banner_heading');
+
+            \Filament\Notifications\Notification::make('resource_lock_readonly')
+                ->warning()
+                ->title($title)
+                ->persistent()
+                ->send();
+        }
+    }
+
     public function getResourceLockOwner(): void
     {
-        if ($this->record?->resourceLock && ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
-            $getResourceLockOwnerActionClass = ResourceLockPlugin::get()->getResourceLockOwnerAction();
-            $getResourceLockOwnerAction = app($getResourceLockOwnerActionClass);
+        if (! $this->record?->resourceLock) {
+            return;
+        }
 
-            $this->resourceLockOwner = $getResourceLockOwnerAction->execute($this->record->resourceLock->user);
+        if ($this->isReadOnly || ResourceLockPlugin::get()->shouldDisplayResourceLockOwner()) {
+            $action = app(ResourceLockPlugin::get()->getResourceLockOwnerAction());
+            $this->resourceLockOwner = $action->execute($this->record->resourceLock->user);
         }
     }
 }

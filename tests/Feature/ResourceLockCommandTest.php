@@ -1,9 +1,30 @@
 <?php
 
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
+use Illuminate\Console\Scheduling\Schedule;
 
 use function Pest\Laravel\artisan;
 use function Pest\Laravel\assertDatabaseCount;
+
+describe('Scheduled Auto-Clear', function () {
+    it('registers the clear-expired command in the scheduler by default', function () {
+        $scheduled = collect(app(Schedule::class)->events())
+            ->contains(fn ($event) => str_contains($event->command, 'filament-resource-lock:clear-expired'));
+
+        expect($scheduled)->toBeTrue();
+    });
+
+    it('schedules the clear-expired command to run hourly', function () {
+        $event = collect(app(Schedule::class)->events())
+            ->first(fn ($event) => str_contains($event->command, 'filament-resource-lock:clear-expired'));
+
+        expect($event->expression)->toBe('0 * * * *');
+    });
+
+    it('auto_clear_expired is enabled by default', function () {
+        expect(config('filament-resource-lock.schedule.auto_clear_expired'))->toBeTrue();
+    });
+});
 
 describe('ResourceLockClearCommand', function () {
     it('clears all resource locks with force flag', function () {

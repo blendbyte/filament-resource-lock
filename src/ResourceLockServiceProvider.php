@@ -5,6 +5,7 @@ namespace Blendbyte\FilamentResourceLock;
 use Blendbyte\FilamentResourceLock\Console\Commands\ResourceLockClearCommand;
 use Blendbyte\FilamentResourceLock\Console\Commands\ResourceLockClearExpiredCommand;
 use Blendbyte\FilamentResourceLock\Listeners\AuditResourceLockEventSubscriber;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Commands\InstallCommand;
@@ -29,6 +30,14 @@ class ResourceLockServiceProvider extends PackageServiceProvider
         Livewire::component('filament-resource-lock-observer', Http\Livewire\ResourceLockObserver::class);
 
         Event::subscribe(AuditResourceLockEventSubscriber::class);
+
+        $this->app->booted(function () {
+            if (config('filament-resource-lock.schedule.auto_clear_expired', true)) {
+                $this->app->make(Schedule::class)
+                    ->command('filament-resource-lock:clear-expired --force')
+                    ->hourly();
+            }
+        });
     }
 
     public function configurePackage(Package $package): void
