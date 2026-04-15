@@ -1,6 +1,4 @@
-<a target="_blank" href="https://github.com/blendbyte/filament-resource-lock/filament-resource-lock-marketing.jpg" class="filament-hidden">
-<img style="width: 100%; max-width: 100%;" src="https://raw.githubusercontent.com/blendbyte/filament-resource-lock/main/filament-resource-lock-marketing.jpg" >
-</a>
+[![Resource Lock](filament-resource-lock-marketing.jpg)](filament-resource-lock-marketing.jpg)
 
 # Resource Lock
 
@@ -12,33 +10,6 @@
 Filament Resource Lock is a Filament plugin that adds resource locking functionality to your site. When a user begins editing a resource, it is automatically locked to prevent other users from editing it at the same time. The resource will be automatically unlocked after a set period of time, or when the user saves or discards their changes.
 
 > **Note:** This package is a fork of [kenepa/resource-lock](https://github.com/kenepa/resource-lock), updated for **Filament v5** compatibility. If you are currently using `kenepa/resource-lock`, see the [migration guide](#migrating-from-keneparesource-lock) below.
-
-## Migrating from kenepa/resource-lock
-
-This fork introduces the following breaking changes:
-
-1. **Composer package** — replace `kenepa/resource-lock` with `blendbyte/filament-resource-lock`
-
-2. **PHP namespace** — find and replace `Kenepa\ResourceLock` with `Blendbyte\FilamentResourceLock` across your application
-
-3. **Config file** — the config was renamed from `resource-lock.php` to `filament-resource-lock.php`. Re-publish if you have a customised config:
-   ```bash
-   php artisan vendor:publish --tag="filament-resource-lock-config" --force
-   ```
-
-4. **Artisan commands** — command signatures changed from `resource-lock:*` to `filament-resource-lock:*` (e.g. `filament-resource-lock:install`)
-
-5. **Filament version** — this package requires **Filament v5**. The original `kenepa/resource-lock` targets Filament v3/v4.
-
-Quick steps:
-
-```bash
-composer remove kenepa/resource-lock
-composer require blendbyte/filament-resource-lock
-php artisan filament-resource-lock:install
-```
-
-Then update all `use Kenepa\ResourceLock\...` import statements to `use Blendbyte\FilamentResourceLock\...`.
 
 ## Installation
 
@@ -66,9 +37,9 @@ public function panel(Panel $panel): Panel
 }
 ```
 
-## Usage
+## Quick Start
 
-### Add Locks to your model
+### 1. Add locks to your model
 
 Add the `HasLocks` trait to the model you want to lock:
 
@@ -82,7 +53,7 @@ class Post extends Model
 }
 ```
 
-### Add Locks to your EditRecord page
+### 2. Add locks to your EditRecord page
 
 Add the `UsesResourceLock` trait to your `EditRecord` page:
 
@@ -97,7 +68,11 @@ class EditPost extends EditRecord
 }
 ```
 
-### Simple modal resource
+That's it — editing a resource now locks it automatically.
+
+## Usage
+
+### Simple modal resources
 
 For simple modal resources, use `UsesSimpleResourceLock` instead:
 
@@ -161,7 +136,7 @@ class ListPosts extends ListRecords
 
 When `shouldDisplayResourceLockOwner()` is enabled on the plugin, the column tooltip will display the lock owner's name (e.g. *"Locked by John Doe"*). Otherwise it falls back to *"Locked by another user"*.
 
-## Polling (SPA mode)
+### Polling (SPA mode)
 
 To support SPA mode, enable polling-based presence detection in the plugin:
 
@@ -176,23 +151,24 @@ To support SPA mode, enable polling-based presence detection in the plugin:
 > **Tip:** Make sure the lock timeout is not lower than the polling interval — otherwise the lock may expire before the next heartbeat is sent.
 
 Additional polling options:
-- **`pollingKeepAlive()`**: Keeps polling alive when the tab is in the background.
-- **`pollingVisible()`**: Only polls when the browser tab is visible.
 
-## Resource Lock Manager
+- **`pollingKeepAlive()`** — keeps polling alive when the tab is in the background.
+- **`pollingVisible()`** — only polls when the browser tab is visible.
+
+### Resource Lock Manager
 
 The package includes a UI to view and manage all active and expired locks, and to unlock resources individually or in bulk.
 
-## Laravel Events
+## Events
 
 The package dispatches Laravel events for every lock lifecycle transition. Events are **enabled by default** and can be consumed by any standard Laravel listener.
 
-| Event | Payload |
-|---|---|
-| `ResourceLocked` | `$lockable`, `$userId` |
-| `ResourceUnlocked` | `$lockable`, `$userId` |
-| `ResourceLockExpired` | `$lockable`, `$originalUserId` |
-| `ResourceLockForceUnlocked` | `$lockable`, `$originalUserId`, `$actorUserId` |
+| Event                      | Payload                                       |
+|----------------------------|-----------------------------------------------|
+| `ResourceLocked`           | `$lockable`, `$userId`                        |
+| `ResourceUnlocked`         | `$lockable`, `$userId`                        |
+| `ResourceLockExpired`      | `$lockable`, `$originalUserId`                |
+| `ResourceLockForceUnlocked`| `$lockable`, `$originalUserId`, `$actorUserId`|
 
 Register a listener in your `AppServiceProvider` or `EventServiceProvider`:
 
@@ -256,7 +232,7 @@ Or via the plugin fluent API:
 )
 ```
 
-### Audit Resource
+### Audit resource
 
 When `audit.enabled` is `true`, a read-only **Lock Audit Log** resource becomes visible in your Filament panel. It displays all recorded events with a colour-coded action badge, filterable by action type and date range.
 
@@ -295,6 +271,7 @@ By default, when a user opens a resource that is locked by someone else, a block
 ```
 
 When read-only mode is active:
+
 - All form fields are disabled.
 - Save, cancel, and delete actions are hidden.
 - A persistent warning banner is displayed, optionally showing the lock owner's name when `shouldDisplayResourceLockOwner()` is enabled.
@@ -372,7 +349,7 @@ Register it in the plugin:
 )
 ```
 
-### Overriding default functionality
+### Overriding the return URL
 
 Override `resourceLockReturnUrl()` to change where the Return button redirects:
 
@@ -383,7 +360,7 @@ public function resourceLockReturnUrl(): string
 }
 ```
 
-## Scheduled auto-clear
+### Scheduled auto-clear
 
 The package automatically registers a scheduled task that runs `filament-resource-lock:clear-expired --force` **every hour**. This is enabled by default (opt-out).
 
@@ -405,7 +382,7 @@ $schedule->command('filament-resource-lock:clear-expired --force')->everyThirtyM
 
 > **Note:** Laravel's scheduler requires a cron entry on your server: `* * * * * php /path/to/artisan schedule:run >> /dev/null 2>&1`
 
-## Publishing assets
+## Publishing Assets
 
 ```bash
 # Migrations
@@ -416,10 +393,44 @@ php artisan migrate
 php artisan vendor:publish --tag="filament-resource-lock-views"
 ```
 
+## Migrating from kenepa/resource-lock
+
+This fork introduces the following breaking changes:
+
+1. **Composer package** — replace `kenepa/resource-lock` with `blendbyte/filament-resource-lock`
+2. **PHP namespace** — find and replace `Kenepa\ResourceLock` with `Blendbyte\FilamentResourceLock` across your application
+3. **Config file** — the config was renamed from `resource-lock.php` to `filament-resource-lock.php`. Re-publish if you have a customised config:
+
+   ```bash
+   php artisan vendor:publish --tag="filament-resource-lock-config" --force
+   ```
+4. **Artisan commands** — command signatures changed from `resource-lock:*` to `filament-resource-lock:*` (e.g. `filament-resource-lock:install`)
+5. **Filament version** — this package requires **Filament v5**. The original `kenepa/resource-lock` targets Filament v3/v4.
+
+Quick steps:
+
+```bash
+composer remove kenepa/resource-lock
+composer require blendbyte/filament-resource-lock
+php artisan filament-resource-lock:install
+```
+
+Then update all `use Kenepa\ResourceLock\...` import statements to `use Blendbyte\FilamentResourceLock\...`.
+
 ## Contributing
 
 Please see [GitHub releases](https://github.com/blendbyte/filament-resource-lock/releases) for changelog information.
 
-## License
+---
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+## Maintained by Blendbyte
+
+<a href="https://www.blendbyte.com">
+  <img src="https://avatars.githubusercontent.com/u/69378377?s=200&v=4" alt="Blendbyte" width="80" align="left" style="margin-right: 16px;">
+</a>
+
+This project is maintained by **[Blendbyte](https://www.blendbyte.com)** — a team of engineers with 20+ years of experience building cloud infrastructure, web applications, and developer tools. We use these packages in production ourselves and actively contribute to the open source ecosystem we rely on every day. Issues and PRs are always welcome.
+
+🌐 [blendbyte.com](https://www.blendbyte.com) · 📧 [hello@blendbyte.com](mailto:hello@blendbyte.com)
+
+<br clear="left">
