@@ -1,0 +1,107 @@
+name: Bug Report
+description: Report a bug or unexpected behavior in filament-resource-lock
+labels: ["bug", "needs-triage"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening a bug report, please check that no existing issue already covers your problem.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. What did you expect to happen instead?
+      placeholder: "When I open an EditRecord page, the lock is not acquired..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps to reliably reproduce the issue.
+      placeholder: |
+        1. Add `HasLocks` to the `Post` model
+        2. Add `UsesResourceLock` to `EditPost`
+        3. Open the edit page in two browser tabs
+        4. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Plugin configuration
+      description: Paste your relevant plugin setup from your panel provider. Omit any sensitive values.
+      render: php
+      placeholder: |
+        ->plugin(ResourceLockPlugin::make()
+            ->usesPollingToDetectPresence()
+            ->lockTimeout(30)
+        )
+
+  - type: dropdown
+    id: filament_version
+    attributes:
+      label: Filament version
+      options:
+        - "5.x (latest)"
+        - "5.x (older patch)"
+    validations:
+      required: true
+
+  - type: input
+    id: package_version
+    attributes:
+      label: filament-resource-lock version
+      placeholder: "e.g. 2.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: laravel_version
+    attributes:
+      label: Laravel version
+      placeholder: "e.g. 12.5.0"
+    validations:
+      required: true
+
+  - type: input
+    id: php_version
+    attributes:
+      label: PHP version
+      placeholder: "e.g. 8.3.12"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: presence_mode
+    attributes:
+      label: Presence detection mode
+      options:
+        - "Livewire (default)"
+        - "Polling (usesPollingToDetectPresence)"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or errors
+      description: Paste any Laravel log entries, browser console errors, or stack traces. Wrapped in a code block automatically.
+      render: text
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have run `php artisan filament-resource-lock:install` and migrated
+          required: false
+        - label: The issue reproduces on a fresh Laravel app (not just my specific project)
+          required: false

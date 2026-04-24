@@ -1,0 +1,50 @@
+name: Feature Request
+description: Propose a new feature or improvement
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature requests are welcome. Please be specific — vague requests are hard to act on.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or limitation you're running into. The "why" is more useful than the "what".
+      placeholder: "When using resource locking with a relation manager, I can't customise the lock timeout per-relation..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How would you like this to work? Include a code example if it helps.
+      render: php
+      placeholder: |
+        class PostCommentsRelationManager extends RelationManager
+        {
+            use UsesRelationManagerResourceLock;
+
+            protected int $lockTimeout = 60;
+        }
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Any workarounds you've tried, or other approaches that could also solve the problem.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this has not been requested before
+          required: true
+        - label: This is specific to filament-resource-lock, not a general Filament or Laravel request
+          required: true
