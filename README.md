@@ -248,6 +248,29 @@ The audit resource navigation can be customised independently of the lock manage
 )
 ```
 
+To restrict who can view the Audit Log resource, enable limited access and specify a gate:
+
+```php
+->plugin(ResourceLockPlugin::make()
+    ->enableAudit()
+    ->auditLimitedAccess()
+    ->auditGate('view-audit-log')
+)
+```
+
+Or via config:
+
+```php
+// config/filament-resource-lock.php
+'audit' => [
+    'enabled' => true,
+    'limited_access' => true,
+    'gate' => 'view-audit-log',
+],
+```
+
+When `limited_access` is `true`, only users for whom `Gate::allows($gate)` returns `true` can view the resource. This works with any standard Laravel gate or [Spatie permissions](https://github.com/spatie/laravel-permission) (`'gate' => 'view audit log'`).
+
 To enable audit logging but hide the built-in resource (e.g. you have a custom UI):
 
 ```php

@@ -74,6 +74,10 @@ class ResourceLockPlugin implements Plugin
 
     protected ?bool $shouldRegisterAuditNavigation = null;
 
+    protected ?bool $limitedAccessToAuditResource = null;
+
+    protected ?string $auditGate = null;
+
     protected ?bool $readOnlyWhenLocked = null;
 
     public static function make(): static
@@ -469,6 +473,30 @@ class ResourceLockPlugin implements Plugin
     public function shouldRegisterAuditNavigation(): bool
     {
         return $this->shouldRegisterAuditNavigation ?? config('filament-resource-lock.audit.should_register_navigation', true);
+    }
+
+    public function auditLimitedAccess(bool $limited = true): static
+    {
+        $this->limitedAccessToAuditResource = $limited;
+
+        return $this;
+    }
+
+    public function shouldLimitAccessToAuditResource(): bool
+    {
+        return $this->limitedAccessToAuditResource ?? config('filament-resource-lock.audit.limited_access', false);
+    }
+
+    public function auditGate(?string $gate): static
+    {
+        $this->auditGate = $gate;
+
+        return $this;
+    }
+
+    public function getAuditGate(): ?string
+    {
+        return $this->auditGate ?? config('filament-resource-lock.audit.gate', null);
     }
 
     public function readOnlyWhenLocked(bool $enabled = true): static

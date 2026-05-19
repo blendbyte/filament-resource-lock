@@ -3,10 +3,83 @@
 declare(strict_types=1);
 
 use Blendbyte\FilamentResourceLock\Models\ResourceLockAudit;
+use Blendbyte\FilamentResourceLock\Resources\AuditResource;
 use Blendbyte\FilamentResourceLock\Resources\AuditResource\ListAuditLogs;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Livewire;
 
 use function Pest\Laravel\actingAs;
+
+describe('Gate access control', function () {
+    it('allows access when limited_access is disabled', function () {
+        $user = createUser();
+        actingAs($user);
+
+        config()->set('filament-resource-lock.audit.limited_access', false);
+
+        expect(AuditResource::canViewAny())->toBeTrue();
+    });
+
+    it('denies access when limited_access is enabled but no gate is configured', function () {
+        $user = createUser();
+        actingAs($user);
+
+        config()->set('filament-resource-lock.audit.limited_access', true);
+        config()->set('filament-resource-lock.audit.gate', null);
+
+        expect(AuditResource::canViewAny())->toBeFalse();
+    });
+
+    it('denies access when limited_access is enabled and gate fails', function () {
+        $user = createUser();
+        actingAs($user);
+
+        Gate::define('view-audit-log', fn () => false);
+
+        config()->set('filament-resource-lock.audit.limited_access', true);
+        config()->set('filament-resource-lock.audit.gate', 'view-audit-log');
+
+        expect(AuditResource::canViewAny())->toBeFalse();
+    });
+
+    it('allows access when limited_access is enabled and gate passes', function () {
+        $user = createUser();
+        actingAs($user);
+
+        Gate::define('view-audit-log', fn () => true);
+
+        config()->set('filament-resource-lock.audit.limited_access', true);
+        config()->set('filament-resource-lock.audit.gate', 'view-audit-log');
+
+        expect(AuditResource::canViewAny())->toBeTrue();
+    });
+
+    it('renders the audit log page when the gate passes', function () {
+        $user = createUser();
+        actingAs($user);
+
+        Gate::define('view-audit-log', fn () => true);
+
+        config()->set('filament-resource-lock.audit.limited_access', true);
+        config()->set('filament-resource-lock.audit.gate', 'view-audit-log');
+
+        Livewire::test(ListAuditLogs::class)
+            ->assertSuccessful();
+    });
+
+    it('returns forbidden when gate denies access', function () {
+        $user = createUser();
+        actingAs($user);
+
+        Gate::define('view-audit-log', fn () => false);
+
+        config()->set('filament-resource-lock.audit.limited_access', true);
+        config()->set('filament-resource-lock.audit.gate', 'view-audit-log');
+
+        Livewire::test(ListAuditLogs::class)
+            ->assertForbidden();
+    });
+});
 
 it('can render audit log index page', function () {
     Livewire::test(ListAuditLogs::class)

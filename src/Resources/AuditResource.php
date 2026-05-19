@@ -13,6 +13,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class AuditResource extends Resource
 {
@@ -48,6 +49,17 @@ class AuditResource extends Resource
     {
         return ResourceLockPlugin::get()->shouldAuditEvents()
             && ResourceLockPlugin::get()->shouldRegisterAuditNavigation();
+    }
+
+    public static function canViewAny(): bool
+    {
+        if (ResourceLockPlugin::get()->shouldLimitAccessToAuditResource()) {
+            $gate = ResourceLockPlugin::get()->getAuditGate();
+
+            return $gate !== null && Gate::allows($gate);
+        }
+
+        return true;
     }
 
     public static function canCreate(): bool

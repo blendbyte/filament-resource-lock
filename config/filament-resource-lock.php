@@ -183,6 +183,8 @@ return [
         'navigation_group' => null,
         'navigation_sort' => 2,
         'should_register_navigation' => true,
+        'limited_access' => false,
+        //        'gate' => ''
     ],
 
     /*
