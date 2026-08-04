@@ -73,6 +73,26 @@ describe('Resource Unlocking', function () {
         expect($post->resourceLock)->toBeNull();
         expect($forceLockResult)->toBeTrue();
     });
+
+    it('clears the loaded lock relation on unlock without a refresh', function () {
+        // Arrange
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+        // A second lock keeps the table non-empty, so the assertions below cannot pass by accident.
+        $otherPost = createPost();
+        createActiveResourceLock($user, $post);
+        createActiveResourceLock($user, $otherPost);
+        $post->load('resourceLock.user');
+
+        // Act
+        $post->unlock();
+
+        // Assert
+        expect($post->relationLoaded('resourceLock'))->toBeFalse()
+            ->and($post->resourceLock)->toBeNull()
+            ->and($post->isLocked())->toBeFalse();
+    });
 });
 
 describe('Lock Status Checks', function () {
