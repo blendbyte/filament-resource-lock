@@ -94,7 +94,10 @@ trait HasLocks
             return false;
         }
 
-        return $this->resourceLock->exists() && ! $this->resourceLock->isExpired($this->getLockTimeout());
+        // `exists` is a property on Model, not a method: calling it as `exists()` falls
+        // through to `__call`, gets forwarded to the query builder and runs an unscoped
+        // `select exists(select * from "resource_locks")` on every invocation.
+        return $this->resourceLock->exists && ! $this->resourceLock->isExpired($this->getLockTimeout());
     }
 
     /**
