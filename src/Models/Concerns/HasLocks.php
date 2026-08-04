@@ -136,6 +136,7 @@ trait HasLocks
             if ($force || $this->lockCreatedByCurrentUser() || $this->hasExpiredLock()) {
                 $originalUserId = $this->resourceLock->user_id;
                 $this->resourceLock()->delete();
+                $this->unsetRelation('resourceLock');
 
                 if (config('filament-resource-lock.events.enabled', true)) {
                     if ($force) {
