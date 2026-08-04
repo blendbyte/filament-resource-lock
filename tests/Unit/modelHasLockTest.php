@@ -6,7 +6,9 @@ use Blendbyte\FilamentResourceLock\Events\ResourceLocked;
 use Blendbyte\FilamentResourceLock\Events\ResourceUnlocked;
 use Blendbyte\FilamentResourceLock\Models\ResourceLock;
 use Blendbyte\FilamentResourceLock\Tests\Resources\Models\PostWithShortTimeout;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
 use function Pest\Laravel\actingAs;
@@ -88,6 +90,30 @@ describe('Lock Status Checks', function () {
 
         // Assert
         expect($post->hasExpiredLock())->toBeTrue();
+    });
+
+    it('does not query the database when the lock relation is already loaded', function () {
+        // Arrange
+        $user = createUser();
+        actingAs($user);
+        $post = createPost();
+        createActiveResourceLock($user, $post);
+        $post->load('resourceLock.user');
+
+        /** @var array<int, string> $queries */
+        $queries = [];
+        DB::listen(function (QueryExecuted $query) use (&$queries): void {
+            $queries[] = $query->sql;
+        });
+
+        // Act
+        $locked = $post->isLocked();
+
+        // Assert
+        expect($locked)->toBeTrue()
+            // `isLocked()` used to run an unscoped `select exists(...)` on every call,
+            // which in a Filament table is once per row per action state.
+            ->and($queries)->toBeEmpty();
     });
 });
 
