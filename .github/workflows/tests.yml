@@ -17,17 +17,17 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pdo, sqlite, pdo_sqlite
           coverage: none
 
       - name: Install dependencies
-        uses: ramsey/composer-install@v4
+        uses: ramsey/composer-install@26d8a556604053a9612623447203a691f406fbe6 # v4
 
       - name: Run tests
         run: vendor/bin/pest --parallel
