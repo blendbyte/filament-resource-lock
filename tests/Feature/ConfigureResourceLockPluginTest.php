@@ -6,13 +6,14 @@ use Blendbyte\FilamentResourceLock\ResourceLockPlugin;
 
 function getResourceLockNavigationItem($panel, string $group = 'Settings', string $label = 'Resource Lock Manager')
 {
-    $navigationItems = $panel->getNavigation();
-
-    $navigationItem = array_find($navigationItems, function ($value, $key) use ($group) {
-        return str_contains($key, $group);
+    $navigationGroup = collect($panel->getNavigation())->first(function ($value, $key) use ($group) {
+        return str_contains((string) $key, $group)
+            || $value->getLabel() === $group;
     });
 
-    return $navigationItem->getItems()[$label];
+    return collect($navigationGroup?->getItems() ?? [])->first(
+        fn ($item) => $item->getLabel() === $label
+    );
 }
 
 describe('Navigation Registration', function () {
